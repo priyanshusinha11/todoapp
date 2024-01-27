@@ -78,6 +78,41 @@ app.get('/todos', verifyToken, async (req, res) => {
     }
 });
 
+app.put('/todos/:id', verifyToken, async (req, res) => {
+    try {
+        const todoId = req.params.id;
+        const { title, description } = req.body;
+        const todo = await Todo.findOne({ _id: todoId, userId: req.user.userId });
+        if (!todo) {
+            return res.status(404).json({ error: 'Todo not found' });
+        }
+        todo.title = title;
+        todo.description = description;
+        await todo.save();
+        res.json(todo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.delete('/todos/:id', verifyToken, async (req, res) => {
+    try {
+        const todoId = req.params.id;
+        const todo = await Todo.findOne({ _id: todoId, userId: req.user.userId });
+        if (!todo) {
+            return res.status(404).json({ error: 'Todo not found' });
+        }
+        await Todo.deleteOne({ _id: todoId, userId: req.user.userId });
+
+        res.json({ message: 'Todo deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
